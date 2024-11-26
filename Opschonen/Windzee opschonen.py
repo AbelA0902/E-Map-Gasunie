@@ -12,11 +12,11 @@ headers = {
 
 # Date range for data retrieval
 today = datetime.date.today()
-last_week = today - datetime.timedelta(days=10)
+last_week = today - datetime.timedelta(days=365)
 
 # API parameters
 points = [0, 36]  # For the Netherlands and offshore
-types = [1]  # Wind (change this to 2 for Solar)
+types = [17]  # Wind off shore
 activities = [1]  # Providing
 classifications = [2]  # Forecast
 granularities = [5]  # Hourly data
@@ -152,14 +152,65 @@ for dimension, result in quality_checks[0].items():
     pdf.ln(10)
 
 # Save the PDF
-pdf_file_name = "data_quality_report.pdf"
+pdf_file_name = "windzee_report.pdf"
 pdf.output(pdf_file_name)
 print(f"PDF report saved as {pdf_file_name}")
 
-# Save data to Excel
+
+def clean_data(df, last_week):
+    # Completeness (Volledigheid): Vul ontbrekende waarden
+    df.fillna({
+        'classification': 2,  # Default valid classification
+        'granularity': 5,  # Default valid granularity
+        'activity': 1,  # Default activity
+    }, inplace=True)
+    
+    # Vul ontbrekende tijdstempels met een logische waarde (bijv. min/max van kolom)
+    if 'validfrom' in df.columns:
+        df['validfrom'].fillna(df['validfrom'].min(), inplace=True)
+    if 'validto' in df.columns:
+        df['validto'].fillna(df['validto'].max(), inplace=True)
+    
+    # Uniqueness (Uniciteit): Verwijder duplicaten
+    df.drop_duplicates(inplace=True)
+    
+    # Timeliness (Actualiteit): Filter rijen buiten het gewenste datumbereik
+    df = df[(df['validfrom'] >= str(last_week)) & (df['validfrom'] < str(today))]
+    
+    # Validity (Validiteit): Filter of corrigeer ongeldige waarden
+    valid_classifications = [1, 2, 3]
+    valid_granularities = [3, 4, 5, 6, 7, 8]
+    valid_activities = [1, 2]
+    
+    df = df[df['classification'].isin(valid_classifications)]
+    df = df[df['granularity'].isin(valid_granularities)]
+    df = df[df['activity'].isin(valid_activities)]
+    
+    # Consistency (Consistentie): Corrigeer validto dat kleiner is dan validfrom
+    df.loc[df['validto'] < df['validfrom'], 'validto'] = df['validfrom'] + pd.Timedelta(hours=1)
+    
+    return df
+
+# Pas de functie toe op de dataframe
 if all_data:
-    excel_file_name = "energy_data.xlsx"
+    df = clean_data(df, last_week)
+
+    # Controleer opnieuw na opschoning
+    missing_values = df.isnull().sum().sum()
+    duplicate_rows = df.duplicated().sum()
+    outdated_data = df[df['validfrom'] < str(last_week)].shape[0]
+    consistency_issues = df[df['validto'] < df['validfrom']].shape[0]
+    
+    print(f"Na opschoning:")
+    print(f"- Missende waarden: {missing_values}")
+    print(f"- Duplicaten: {duplicate_rows}")
+    print(f"- Verouderde data: {outdated_data}")
+    print(f"- Inconsistente validto-validfrom: {consistency_issues}")
+
+# Genereer PDF en sla Excel opnieuw op met de opgeschoonde data
+if not df.empty:
+    excel_file_name = "cleaned_windzee_data.xlsx"
     df.to_excel(excel_file_name, index=False)
-    print(f"Data saved as {excel_file_name}")
+    print(f"Opgeschoonde data opgeslagen als {excel_file_name}")
 else:
-    print("No data to save.")
+    print("Geen geldige data na opschoning.")

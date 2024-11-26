@@ -57,7 +57,7 @@ print(f"Aantal rijen verzameld: {len(all_data)}")
 # Exporteer naar Excel als er data is
 if all_data:
     df = pd.DataFrame(all_data)
-    df.to_excel("energy_data.xlsx", index=False)
+    df.to_excel("Wind.xlsx", index=False)
     print("Data succesvol opgeslagen in energy_data.xlsx")
 else:
     print("Geen data om op te slaan.")

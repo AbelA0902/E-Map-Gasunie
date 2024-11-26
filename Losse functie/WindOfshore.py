@@ -10,7 +10,7 @@ today = datetime.date.today()
 last_week = today - datetime.timedelta(days=10) #voor de afgelopen 7 dagen
 
 points = [0, 36]  # Voor heel nederland en offshore
-types = [1] #wind 
+types = [51] #windoffshore
 activities = [1] #providing
 classifications = [2] #forecast, current, backcast
 granularities = [5] #op welke manier de data is gegroepeerd 10 minuten 15 minuten 1 uur en 1 dag.
@@ -57,7 +57,7 @@ print(f"Aantal rijen verzameld: {len(all_data)}")
 # Exporteer naar Excel als er data is
 if all_data:
     df = pd.DataFrame(all_data)
-    df.to_excel("energy_data.xlsx", index=False)
+    df.to_excel("WindOfShore.xlsx", index=False)
     print("Data succesvol opgeslagen in energy_data.xlsx")
 else:
     print("Geen data om op te slaan.")
