@@ -20,7 +20,7 @@ types = [1]  # Wind (change this to 2 for Solar)
 activities = [1]  # Providing
 classifications = [2]  # Forecast
 granularities = [5]  # Hourly data
-granularity_timezones = [0, 1]  # All timezones
+granularity_timezones = [0]  # UTC
 
 # Energy source name based on the type
 energy_type_names = {
@@ -69,11 +69,17 @@ for point in points:
 
 print(f"Aantal rijen verzameld: {len(all_data)}")
 
-# Data quality checks
+# Initialize quality_checks as an empty list
 quality_checks = []
 
 if all_data:
     df = pd.DataFrame(all_data)
+
+    # Converteer 'validfrom' en 'validto' naar datetime-formaat
+    if 'validfrom' in df.columns:
+        df['validfrom'] = pd.to_datetime(df['validfrom'], errors='coerce')
+    if 'validto' in df.columns:
+        df['validto'] = pd.to_datetime(df['validto'], errors='coerce')
 
     # Completeness (Volledigheid) - Missing Values
     missing_values = df.isnull().sum().sum()
@@ -81,6 +87,20 @@ if all_data:
 
     # Uniqueness (Uniciteit) - Duplicate Rows
     duplicate_rows = df.duplicated().sum()
+
+    # Identical and descending check for ID numbers (added under Uniqueness)
+    id_uniqueness_issues = df['id'].duplicated().sum() if 'id' in df.columns else "ID column missing"
+    id_descending_issues = (
+        sum(df['id'].diff() > 0) if 'id' in df.columns and not df['id'].isnull().all() else "ID column missing"
+    )
+
+    # Check for descending order and duplicates in `validfrom`
+    if 'validfrom' in df.columns:
+        validfrom_descending_issues = sum(df['validfrom'].diff().dt.total_seconds() > 0)
+        validfrom_duplicate_issues = df['validfrom'].duplicated().sum()
+    else:
+        validfrom_descending_issues = "validfrom column missing"
+        validfrom_duplicate_issues = "validfrom column missing"
 
     # Timeliness (Actualiteit) - Check if validfrom is up-to-date
     outdated_data = df[df['validfrom'] < str(last_week)].shape[0]
@@ -96,19 +116,26 @@ if all_data:
     invalid_activities = df.shape[0] - valid_activities
 
     # Consistency (Consistentie) - Check validto > validfrom
-    df['validfrom'] = pd.to_datetime(df['validfrom'])
-    df['validto'] = pd.to_datetime(df['validto'])
     consistency_issues = df[df['validto'] < df['validfrom']].shape[0]
+
+    # Accuracy (Nauwkeurigheid): Not applicable in this context
+    accuracy_issues = "Not applicable (accuracy cannot be verified without external reference data)"
 
     # Prepare the results for the PDF
     quality_checks.append({
         "Volledigheid (Completeness)": f"{missing_values} missing values",
-        "Uniciteit (Uniqueness)": f"{duplicate_rows} duplicate rows",
+        "Uniciteit (Uniqueness)": (
+            f"{duplicate_rows} duplicate rows; {id_uniqueness_issues} duplicate ID issues; "
+            f"{id_descending_issues} ascending ID issues (expected descending order); "
+            f"{validfrom_descending_issues} validfrom not in descending order; "
+            f"{validfrom_duplicate_issues} duplicate validfrom dates"
+        ),
         "Actualiteit (Timeliness)": f"{outdated_data} outdated rows",
         "Validiteit (Validity)": f"Invalid classifications: {invalid_classifications}, Invalid granularities: {invalid_granularities}, Invalid activities: {invalid_activities}",
-        "Nauwkeurigheid (Accuracy)": "Not applicable (accuracy cannot be verified without external reference data)",
+        "Nauwkeurigheid (Accuracy)": accuracy_issues,
         "Consistentie (Consistency)": f"{consistency_issues} rows with invalid validto > validfrom"
     })
+
 
     # Ensure timezone-unaware datetimes before saving to Excel
     df['validfrom'] = df['validfrom'].dt.tz_localize(None)
@@ -128,9 +155,9 @@ pdf.ln(10)
 pdf.set_font("Arial", style='B', size=12)
 pdf.cell(200, 10, txt="Overview of Data Quality Dimensions", ln=True, align='L')
 pdf.set_font("Arial", size=12)
-pdf.multi_cell(0, 10, txt="""
+pdf.multi_cell(0, 10, txt="""\
 1. **Volledigheid (Completeness)**: Checks for missing values in the dataset.
-2. **Uniciteit (Uniqueness)**: Identifies duplicate rows in the dataset.
+2. **Uniciteit (Uniqueness)**: Identifies duplicate rows, and checks for ID and date consistency.
 3. **Actualiteit (Timeliness)**: Verifies if the data is up-to-date and within the correct date range.
 4. **Validiteit (Validity)**: Checks if the data conforms to predefined valid values for classification, granularity, and activity.
 5. **Nauwkeurigheid (Accuracy)**: Assumes high accuracy if no obvious data errors are found.
@@ -151,67 +178,8 @@ for dimension, result in quality_checks[0].items():
     pdf.multi_cell(100, 10, result, border=1, align='L')  # Use multi_cell for wrapping text
     pdf.ln(10)
 
-# Save the PDF
-pdf_file_name = "windland_report.pdf"
+# Dynamically set the file name based on the energy source
+energy_source_for_file_name = energy_type_name[0].replace(" ", "_").lower()  # Replace spaces with underscores and make lowercase
+pdf_file_name = f"{energy_source_for_file_name}_energy_report.pdf"
 pdf.output(pdf_file_name)
 print(f"PDF report saved as {pdf_file_name}")
-
-
-
-def clean_data(df, last_week):
-    # Completeness (Volledigheid): Vul ontbrekende waarden
-    df.fillna({
-        'classification': 2,  # Default valid classification
-        'granularity': 5,  # Default valid granularity
-        'activity': 1,  # Default activity
-    }, inplace=True)
-    
-    # Vul ontbrekende tijdstempels met een logische waarde (bijv. min/max van kolom)
-    if 'validfrom' in df.columns:
-        df['validfrom'].fillna(df['validfrom'].min(), inplace=True)
-    if 'validto' in df.columns:
-        df['validto'].fillna(df['validto'].max(), inplace=True)
-    
-    # Uniqueness (Uniciteit): Verwijder duplicaten
-    df.drop_duplicates(inplace=True)
-    
-    # Timeliness (Actualiteit): Filter rijen buiten het gewenste datumbereik
-    df = df[(df['validfrom'] >= str(last_week)) & (df['validfrom'] < str(today))]
-    
-    # Validity (Validiteit): Filter of corrigeer ongeldige waarden
-    valid_classifications = [1, 2, 3]
-    valid_granularities = [3, 4, 5, 6, 7, 8]
-    valid_activities = [1, 2]
-    
-    df = df[df['classification'].isin(valid_classifications)]
-    df = df[df['granularity'].isin(valid_granularities)]
-    df = df[df['activity'].isin(valid_activities)]
-    
-    # Consistency (Consistentie): Corrigeer validto dat kleiner is dan validfrom
-    df.loc[df['validto'] < df['validfrom'], 'validto'] = df['validfrom'] + pd.Timedelta(hours=1)
-    
-    return df
-
-# Pas de functie toe op de dataframe
-if all_data:
-    df = clean_data(df, last_week)
-
-    # Controleer opnieuw na opschoning
-    missing_values = df.isnull().sum().sum()
-    duplicate_rows = df.duplicated().sum()
-    outdated_data = df[df['validfrom'] < str(last_week)].shape[0]
-    consistency_issues = df[df['validto'] < df['validfrom']].shape[0]
-    
-    print(f"Na opschoning:")
-    print(f"- Missende waarden: {missing_values}")
-    print(f"- Duplicaten: {duplicate_rows}")
-    print(f"- Verouderde data: {outdated_data}")
-    print(f"- Inconsistente validto-validfrom: {consistency_issues}")
-
-# Genereer PDF en sla Excel opnieuw op met de opgeschoonde data
-if not df.empty:
-    excel_file_name = "cleaned_windland_data.xlsx"
-    df.to_excel(excel_file_name, index=False)
-    print(f"Opgeschoonde data opgeslagen als {excel_file_name}")
-else:
-    print("Geen geldige data na opschoning.")
