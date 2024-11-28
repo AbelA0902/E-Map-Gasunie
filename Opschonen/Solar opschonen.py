@@ -129,12 +129,12 @@ pdf.set_font("Arial", style='B', size=12)
 pdf.cell(200, 10, txt="Overview of Data Quality Dimensions", ln=True, align='L')
 pdf.set_font("Arial", size=12)
 pdf.multi_cell(0, 10, txt="""
-1. **Volledigheid (Completeness)**: Checks for missing values in the dataset.
-2. **Uniciteit (Uniqueness)**: Identifies duplicate rows in the dataset.
-3. **Actualiteit (Timeliness)**: Verifies if the data is up-to-date and within the correct date range.
-4. **Validiteit (Validity)**: Checks if the data conforms to predefined valid values for classification, granularity, and activity.
-5. **Nauwkeurigheid (Accuracy)**: Assumes high accuracy if no obvious data errors are found.
-6. **Consistentie (Consistency)**: Ensures temporal consistency between `validfrom` and `validto`.
+1. **Volledigheid (Completeness)**: Missende waarde
+2. **Uniciteit (Uniqueness)**: Dubbele waarde 
+3. **Actualiteit (Timeliness)**: Controleert tijds bestek van relevante data
+4. **Validiteit (Validity)**: Controleert of data overeen komt met vereiste granulariteit en functie
+5. **Nauwkeurigheid (Accuracy)**: Controleert lege velden/ foute in data
+6. **Consistentie (Consistency)**: controleert of waarde tussen valid from en valid till liggen.
 """)
 pdf.ln(10)
 

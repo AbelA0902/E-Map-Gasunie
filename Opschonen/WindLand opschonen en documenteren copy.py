@@ -180,7 +180,7 @@ def clean_data(df, last_week):
     
     # Validity (Validiteit): Filter of corrigeer ongeldige waarden
     valid_classifications = [1, 2, 3]
-    valid_granularities = [3, 4, 5, 6, 7, 8]
+    valid_granularities = [5]
     valid_activities = [1, 2]
     
     df = df[df['classification'].isin(valid_classifications)]
