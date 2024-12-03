@@ -16,7 +16,7 @@ last_week = today - datetime.timedelta(days=365)
 
 # API parameters
 points = [0, 36]  # For the Netherlands and offshore
-types = [1]  # Wind (change this to 2 for Solar)
+types = [18]  # Fossil Gas Power
 activities = [1]  # Providing
 classifications = [2]  # Forecast
 granularities = [5]  # Hourly data
