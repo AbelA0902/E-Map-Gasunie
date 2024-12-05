@@ -12,7 +12,7 @@ headers = {
 
 # Date range for data retrieval
 today = datetime.date.today()
-last_week = today - datetime.timedelta(days=365)
+last_week = today - datetime.timedelta(days=20)
 
 # API parameters
 points = [0, 36]  # For the Netherlands and offshore
