@@ -4,11 +4,11 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 
 # 1. Laad de data
-file_path = 'cleaned_fossilgaspower_data.xlsx'  # Vervang met de juiste bestandsnaam
+file_path = 'cleaned_fossilgaspower_data.xlsx'  # Vervang met benodigde bestand
 data = pd.read_excel(file_path)
 
 # 2. Selecteer relevante kolommen
-selected_columns = ['capacity', 'emissionfactor', 'validfrom', 'timezone', 'activity', 'classification', 'volume']
+selected_columns = ['capacity', 'emissionfactor', 'validfrom', 'timezone', 'activity', 'classification', 'volume', 'point']
 prepared_data = data[selected_columns]
 
 # 3. Verwerk tijdsgerelateerde informatie
@@ -18,7 +18,7 @@ prepared_data['month'] = prepared_data['validfrom'].dt.month
 prepared_data = prepared_data.drop(columns=['validfrom'])
 
 # 4. Splits features en doelvariabele
-X = prepared_data.drop(columns=['volume'])
+X = prepared_data.drop(columns=['volume', 'point'])
 y = prepared_data['volume']
 
 # 5. Splits data in training- en testsets
@@ -35,14 +35,13 @@ r2 = r2_score(y_test, y_pred)
 
 print(f"Model evaluatie:\nMean Squared Error: {mse}\nR^2 Score: {r2}")
 
-# Laad toekomstige data (vervang met je bestand)
-toekomstige_data = pd.read_excel('cleaned_fossilgaspower_data.xlsx')
+# Laad toekomstige data
+toekomstige_data = pd.read_excel(file_path)
 
 # Verwerk tijdsgerelateerde informatie
 toekomstige_data['hour'] = toekomstige_data['validfrom'].dt.hour
 toekomstige_data['day'] = toekomstige_data['validfrom'].dt.day
 toekomstige_data['month'] = toekomstige_data['validfrom'].dt.month
-toekomstige_data = toekomstige_data.drop(columns=['validfrom'])
 
 # Selecteer relevante features
 X_toekomstig = toekomstige_data[['capacity', 'emissionfactor', 'timezone', 'activity', 'classification', 'hour', 'day', 'month']]
@@ -53,6 +52,9 @@ voorspellingen = model.predict(X_toekomstig)
 # Voeg voorspellingen toe aan de dataset
 toekomstige_data['voorspelling'] = voorspellingen
 
+# Selecteer de gewenste kolommen en hernoem 'validfrom' naar 'date'
+output_data = toekomstige_data[['volume', 'point', 'emissionfactor', 'validfrom', 'voorspelling']].rename(columns={'validfrom': 'date'})
+
 # Sla de resultaten op in een Excel-bestand
-toekomstige_data.to_excel('voorspellingen.xlsx', index=False)
+output_data.to_excel('voorspellingen.xlsx', index=False)
 print("Voorspellingen opgeslagen in 'voorspellingen.xlsx'.")
