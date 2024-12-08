@@ -1,245 +1,149 @@
-import requests
-import datetime
 import pandas as pd
 from fpdf import FPDF
 
-# API configuration
-url = "https://api.ned.nl/v1/utilizations"
-headers = {
-    'X-AUTH-TOKEN': '9c99896102ff51d3bf69eca8796b63e2e0a10b9f9e316645e3b80194d041b4a7',
-    'accept': 'application/ld+json'
-}
+# Functie voor het inleiden van het Excel bestand
+def read_excel_file(file_path):
+    try:
+        df = pd.read_excel(file_path)
+        print(f"Bestand {file_path} succesvol ingelezen.")
+        return df
+    except Exception as e:
+        print(f"Fout bij het inlezen van het bestand: {e}")
+        return None
 
-# Date range for data retrieval
-today = datetime.date.today()
-last_week = today - datetime.timedelta(days=365)
+# Bestandspad van het Excel bestand om in te lezen
+input_file_path = 'Excel storage\Solar_Data_2022_to_Today.xlsx'  # Vul hier het volledige bestandspad in
 
-# API parameters
-points = [0, 36]  # For the Netherlands and offshore
-types = [2]  # Wind (change this to 2 for Solar)
-activities = [1]  # Providing
-classifications = [2]  # Forecast
-granularities = [5]  # Hourly data
-granularity_timezones = [0]  # UTC
+# Inleiden van de data uit het opgegeven bestand
+df = read_excel_file(input_file_path)
 
-# Energy source name based on the type
-energy_type_names = {
-    1: "Wind",
-    2: "Solar",
-    3: "Biogas",
-    4: "HeatPump",
-    8: "Cofiring",
-    9: "Geothermal",
-    10: "Other",
-    11: "Waste",
-    12: "Bio-Oil",
-    13:  "Biomass",
-    14: "Wood",
-    17: "Offshore Wind",
-    18: "FossilGasPower",
-    19: "FossilHardCoal",
-    20: "Nuclear",
-    21: "WastePower",
-    22: "WindOffshoreB",
-    23: "NaturalGas",
-    24: "Biomethane",
-    25: "BiomassPower",
-    26: "OtherPower",
-    27: "ElectricityMix",
-    28: "GasMix",
-    31: "GasDistribution",
-    35: "WKK Total",
-    50: "SolarThermal",
-    51: "WindOffshoreC",
-    53: "IndustrialConsumersGasCombination",
-    54: "IndustrialConsumersPowerGasCombination",
-    55: "LocalDistributionCompaniesCombination",
-    56: "AllConsumingGas"
-}
-
-# Determine the energy source name
-energy_type_name = [energy_type_names.get(energy, "Unknown") for energy in types]
-
-# Collect data
-all_data = []
-
-for point in points:
-    for energy_type in types:
-        for activity in activities:
-            for classification in classifications:
-                for granularity in granularities:
-                    for timezone in granularity_timezones:
-                        params = {
-                            'point': point,
-                            'type': energy_type,
-                            'activity': activity,
-                            'granularity': granularity,
-                            'granularitytimezone': timezone,
-                            'classification': classification,
-                            'validfrom[after]': str(last_week),
-                            'validfrom[strictly_before]': str(today)
-                        }
-
-                        response = requests.get(url, headers=headers, params=params)
-                        print(f"Status code: {response.status_code}")
-                        data = response.json()
-
-                        if data.get('hydra:totalItems', 0) > 0:
-                            for item in data['hydra:member']:
-                                item['point'] = point
-                                item['type'] = energy_type
-                                item['activity'] = activity
-                                item['classification'] = classification
-                                item['granularity'] = granularity
-                                item['timezone'] = timezone
-
-                                all_data.append(item)
-
-print(f"Aantal rijen verzameld: {len(all_data)}")
-
-# Initialize quality_checks as an empty list
-quality_checks = []
-
-if all_data:
-    df = pd.DataFrame(all_data)
-
-    # Convert 'validfrom' and 'validto' to datetime format
-    if 'validfrom' in df.columns:
-        df['validfrom'] = pd.to_datetime(df['validfrom'], errors='coerce')
-    if 'validto' in df.columns:
-        df['validto'] = pd.to_datetime(df['validto'], errors='coerce')
-
-    # Completeness (Volledigheid) - Missing Values
-    missing_values = df.isnull().sum().sum()
-
-    # Uniqueness (Uniciteit) - Duplicate Rows
-    duplicate_rows = df.duplicated().sum()
-
-    # Timeliness (Actualiteit) - Check if validfrom is up-to-date
-    outdated_data = df[df['validfrom'] < str(last_week)].shape[0]
-
-    # Validity (Validiteit) - Check for valid classification, granularity, activity
-    valid_classifications = df['classification'].isin([1, 2, 3]).sum()
-    invalid_classifications = df.shape[0] - valid_classifications
-
-    valid_granularities = df['granularity'].isin([3, 4, 5, 6, 7, 8]).sum()
-    invalid_granularities = df.shape[0] - valid_granularities
-
-    valid_activities = df['activity'].isin([1, 2]).sum()
-    invalid_activities = df.shape[0] - valid_activities
-
-    # Consistency (Consistentie) - Check validto > validfrom
-    consistency_issues = df[df['validto'] < df['validfrom']].shape[0]
-
-    # Prepare the results for the PDF
-    quality_checks.append({
-        "Volledigheid (Completeness)": f"{missing_values} missing values",
-        "Uniciteit (Uniqueness)": f"{duplicate_rows} duplicate rows",
-        "Actualiteit (Timeliness)": f"{outdated_data} outdated rows",
-        "Validiteit (Validity)": f"Invalid classifications: {invalid_classifications}, Invalid granularities: {invalid_granularities}, Invalid activities: {invalid_activities}",
-        "Consistentie (Consistency)": f"{consistency_issues} rows with invalid validto > validfrom"
-    })
-
-    # Ensure timezone-unaware datetimes before saving to Excel
+# Controleer of het bestand succesvol is ingelezen
+if df is not None:
+    # Zorg ervoor dat de kolommen 'validfrom' en 'validto' in datetime-formaat zijn
+    df['validfrom'] = pd.to_datetime(df['validfrom'], errors='coerce')
+    df['validto'] = pd.to_datetime(df['validto'], errors='coerce')
+    
+    # Verwijder eventuele tijdzone-informatie van de datums (tijdzone-onafhankelijk maken)
     df['validfrom'] = df['validfrom'].dt.tz_localize(None)
     df['validto'] = df['validto'].dt.tz_localize(None)
+    
+    # Bepaal de startdatum (minimale datum) van het bestand en de einddatum (vandaag)
+    start_date = df['validfrom'].min()
+    today = pd.to_datetime('today')
 
-# Function to clean data
-def clean_data(df, last_week):
-    # Completeness (Volledigheid): Fill missing values
-    df.fillna({
-        'classification': 2,  # Default valid classification
-        'granularity': 5,  # Default valid granularity
-        'activity': 1,  # Default activity
-    }, inplace=True)
-    
-    # Fill missing timestamps with logical values (e.g., min/max of column)
-    if 'validfrom' in df.columns:
-        df['validfrom'].fillna(df['validfrom'].min(), inplace=True)
-    if 'validto' in df.columns:
-        df['validto'].fillna(df['validto'].max(), inplace=True)
-    
-    # Uniqueness (Uniciteit): Remove duplicates
-    df.drop_duplicates(inplace=True)
-    
-    # Timeliness (Actualiteit): Filter rows outside the desired date range
-    df = df[(df['validfrom'] >= str(last_week)) & (df['validfrom'] < str(today))]
-    
-    # Validity (Validiteit): Filter or correct invalid values
-    valid_classifications = [1, 2, 3]
-    valid_granularities = [3, 4, 5, 6, 7, 8]
-    valid_activities = [1, 2]
-    
-    df = df[df['classification'].isin(valid_classifications)]
-    df = df[df['granularity'].isin(valid_granularities)]
-    df = df[df['activity'].isin(valid_activities)]
-    
-    # Consistency (Consistentie): Correct validto less than validfrom
-    df.loc[df['validto'] < df['validfrom'], 'validto'] = df['validfrom'] + pd.Timedelta(hours=1)
-    
-    return df
+    # Functie om de data op te schonen
+    def clean_data(df, start_date, today):
+        # Completeness (Volledigheid): Vul missende waarden in
+        df.fillna({
+            'classification': 2,  # Default geldige classificatie
+            'granularity': 5,  # Default geldige granulariteit
+            'activity': 1,  # Default activiteit
+        }, inplace=True)
 
-# Apply the cleaning function
-if all_data:
-    df = clean_data(df, last_week)
+        # Vul missende tijdstempels met logische waarden (bijvoorbeeld min/max van de kolom)
+        if 'validfrom' in df.columns:
+            df['validfrom'].fillna(df['validfrom'].min(), inplace=True)
+        if 'validto' in df.columns:
+            df['validto'].fillna(df['validto'].max(), inplace=True)
 
-    # Check again after cleaning
-    missing_values = df.isnull().sum().sum()
-    duplicate_rows = df.duplicated().sum()
-    outdated_data = df[df['validfrom'] < str(last_week)].shape[0]
-    consistency_issues = df[df['validto'] < df['validfrom']].shape[0]
-    
-    print(f"Na opschoning:")
-    print(f"- Missende waarden: {missing_values}")
-    print(f"- Duplicaten: {duplicate_rows}")
-    print(f"- Verouderde data: {outdated_data}")
-    print(f"- Inconsistente validto-validfrom: {consistency_issues}")
+        # Uniqueness (Uniciteit): Verwijder duplicaten
+        df.drop_duplicates(inplace=True)
 
-    # Save cleaned data to Excel
-    excel_file_name = f"cleaned_{energy_type_name[0].replace(' ', '_').lower()}_data.xlsx"
-    df.to_excel(excel_file_name, index=False)
+        # Timeliness (Actualiteit): Filter rijen buiten de gewenste datumbereik
+        df = df[(df['validfrom'] >= start_date) & (df['validfrom'] <= today)]
+
+        # Validity (Validiteit): Filter of corrigeer ongeldige waarden
+        valid_classifications = [1, 2, 3]
+        valid_granularities = [3, 4, 5, 6, 7, 8]
+        valid_activities = [1, 2]
+
+        df = df[df['classification'].isin(valid_classifications)]
+        df = df[df['granularity'].isin(valid_granularities)]
+        df = df[df['activity'].isin(valid_activities)]
+
+        # Consistency (Consistentie): Corrigeer validto minder dan validfrom
+        df.loc[df['validto'] < df['validfrom'], 'validto'] = df['validfrom'] + pd.Timedelta(hours=1)
+
+        return df
+
+    # Pas de opschoning toe op de ingelezen data
+    df_cleaned = clean_data(df, start_date, today)
+
+    # Controleer of de data is opgeschoond
+    print(f"Na opschoning zijn er {df_cleaned.shape[0]} rijen over.")
+
+    # Opslaan van de opgeschoonde data in een nieuw Excel-bestand
+    excel_file_name = "cleaned_data_solar.xlsx"  # Nieuwe output bestandsnaam
+    df_cleaned.to_excel(excel_file_name, index=False)
     print(f"Opgeschoonde data opgeslagen als {excel_file_name}")
-else:
-    print("Geen geldige data na opschoning.")
+    
+    # Genereer PDF-rapport
+    def generate_pdf_report(df):
+        # Initialiseer de PDF
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
 
-# Generate PDF report
-pdf = FPDF()
-pdf.add_page()
-pdf.set_font("Arial", size=12)
+        # Titel van het rapport
+        title = input_file_path
+        pdf.cell(200, 10, txt=title, ln=True, align='C')
+        pdf.ln(10)
 
-# Dynamic title based on energy source
-title = f"{energy_type_name[0]} Energy Data Quality Report"
-pdf.cell(200, 10, txt=title, ln=True, align='C')
-pdf.ln(10)
-
-# Overview of checks
-pdf.set_font("Arial", style='B', size=12)
-pdf.cell(200, 10, txt="Overview of Data Quality Dimensions", ln=True, align='L')
-pdf.set_font("Arial", size=12)
-pdf.multi_cell(0, 10, txt="""\
+        # Data kwaliteit dimensies
+        pdf.set_font("Arial", style='B', size=12)
+        pdf.cell(200, 10, txt="Overview of Data Quality Dimensions", ln=True, align='L')
+        pdf.set_font("Arial", size=12)
+        pdf.multi_cell(0, 10, txt="""\
 1. **Volledigheid (Completeness)**: Checks for missing values in the dataset.
 2. **Uniciteit (Uniqueness)**: Identifies duplicate rows, and checks for ID and date consistency.
 3. **Actualiteit (Timeliness)**: Verifies if the data is up-to-date and within the correct date range.
 4. **Validiteit (Validity)**: Checks if the data conforms to predefined valid values for classification, granularity, and activity.
 5. **Consistentie (Consistency)**: Ensures temporal consistency between `validfrom` and `validto`.
 """)
-pdf.ln(10)
+        pdf.ln(10)
 
-# Numeric statistics table
-pdf.set_font("Arial", style='B', size=12)
-pdf.cell(60, 10, 'Data Dimension', border=1, align='C')
-pdf.cell(100, 10, 'Check Result', border=1, align='C')
-pdf.ln(10)
+        # Bereken data kwaliteit statistieken
+        completeness = df.isnull().sum().sum()
+        uniqueness = df.duplicated().sum()
+        timeliness = df[df['validfrom'] < start_date].shape[0]
+        validity = df.shape[0] - df[df['classification'].isin([1, 2, 3])].shape[0]
+        consistency = df[df['validto'] < df['validfrom']].shape[0]
 
-# Add quality check results to the PDF
-pdf.set_font("Arial", size=12)
-for dimension, result in quality_checks[0].items():
-    pdf.cell(60, 10, dimension, border=1, align='L')
-    pdf.multi_cell(100, 10, result, border=1, align='L')  # Use multi_cell for wrapping text
-    pdf.ln(10)
+        # Voeg resultaten toe aan de PDF
+        pdf.set_font("Arial", style='B', size=12)
+        pdf.cell(60, 10, 'Data Dimension', border=1, align='C')
+        pdf.cell(100, 10, 'Check Result', border=1, align='C')
+        pdf.ln(10)
 
-# Dynamically set the file name based on the energy source
-energy_source_for_file_name = energy_type_name[0].replace(" ", "_").lower()  # Replace spaces with underscores and make lowercase
-pdf_file_name = f"{energy_source_for_file_name}_energy_report.pdf"
-pdf.output(pdf_file_name)
-print(f"PDF report saved as {pdf_file_name}")
+        # Resultaten voor elke dimensie
+        pdf.set_font("Arial", size=12)
+        pdf.cell(60, 10, "Volledigheid", border=1, align='L')
+        pdf.cell(100, 10, f"{completeness} missing values", border=1, align='L')
+        pdf.ln(10)
+
+        pdf.cell(60, 10, "Uniciteit", border=1, align='L')
+        pdf.cell(100, 10, f"{uniqueness} duplicate rows", border=1, align='L')
+        pdf.ln(10)
+
+        pdf.cell(60, 10, "Actualiteit", border=1, align='L')
+        pdf.cell(100, 10, f"{timeliness} outdated rows", border=1, align='L')
+        pdf.ln(10)
+
+        pdf.cell(60, 10, "Validiteit", border=1, align='L')
+        pdf.cell(100, 10, f"{validity} invalid classifications", border=1, align='L')
+        pdf.ln(10)
+
+        pdf.cell(60, 10, "Consistentie", border=1, align='L')
+        pdf.cell(100, 10, f"{consistency} inconsistent rows (validto < validfrom)", border=1, align='L')
+        pdf.ln(10)
+
+        # Bestandsnaam voor het PDF-rapport
+        pdf_file_name = "Solar_data_quality_report.pdf"
+        pdf.output(pdf_file_name)
+        print(f"PDF-rapport opgeslagen als {pdf_file_name}")
+
+    # Genereer en sla het PDF-rapport op
+    generate_pdf_report(df_cleaned)
+
+else:
+    print("Geen geldige data gevonden. Zorg ervoor dat het bestand goed is en probeer opnieuw.")
