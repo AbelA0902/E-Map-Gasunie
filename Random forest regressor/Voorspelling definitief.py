@@ -2,12 +2,14 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
 
-# Te wijzigen parameters voor invoer- en uitvoerbestanden
+# Kun je veranderen om verschillende bestanden op te halen en vervolgens op te schonen. keuze uit: fossilgaspower, solar, wind, windoffshore
 input_file = 'Opgeschoonde data/cleaned_data_windoffshore.xlsx'
 output_file_predictions = 'voorspellingen_2025.xlsx'
 
-# Inlezen van gegevensbestand
+# Inlezen van gekozen bestand
 data = pd.read_excel(input_file)
 
 # Omzetten van kolommen naar datetime-formaat en verwijderen van ongeldige datums
@@ -15,13 +17,12 @@ data['validfrom'] = pd.to_datetime(data['validfrom'], errors='coerce')
 data['validto'] = pd.to_datetime(data['validto'], errors='coerce')
 data = data.dropna(subset=['validfrom', 'validto'])
 
-# Extractie van tijdgerelateerde kenmerken
 data['hour'] = data['validfrom'].dt.hour
 data['day'] = data['validfrom'].dt.day
 data['month'] = data['validfrom'].dt.month
 data['year'] = data['validfrom'].dt.year
 
-# Selectie van invoer- en uitvoerkenmerken voor het model
+# Kenmerken en doelvariabele instellen
 features = ['point', 'hour', 'day', 'month', 'year']
 X = data[features]
 y = data['volume']
@@ -30,11 +31,22 @@ y = data['volume']
 label_encoder_point = LabelEncoder()
 X['point'] = label_encoder_point.fit_transform(X['point'])
 
-# Training van een Random Forest-model
-model = RandomForestRegressor(random_state=42, n_estimators=100)
-model.fit(X, y)
+# Splitsen van data in een training- (80%) en testset (20%)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=69)
 
-# Genereren van toekomstige gegevens voor voorspellingen
+# Model initialiseren en trainen
+model = RandomForestRegressor(random_state=69, n_estimators=101)
+model.fit(X_train, y_train)
+
+# Testen van het model op de testset
+y_pred = model.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print(f"Mean Squared Error op de testset: {mse}")
+print(f"R²-score op de testset: {r2}")
+
+# Bestand maken voor voorspellingdata
 points = data['point'].unique()
 date_range = pd.date_range(start='2025-01-01', end='2025-12-31 23:59:59', freq='H')
 future_data = pd.DataFrame(
@@ -42,7 +54,7 @@ future_data = pd.DataFrame(
     columns=['point', 'datetime']
 )
 
-# Toevoegen van tijdkenmerken aan toekomstige gegevens
+# Toevoegen van datum en tijd nieuwe bestand
 future_data['hour'] = future_data['datetime'].dt.hour
 future_data['day'] = future_data['datetime'].dt.day
 future_data['month'] = future_data['datetime'].dt.month
@@ -56,6 +68,6 @@ future_data['point'] = label_encoder_point.transform(future_data['point'])
 predictions = model.predict(future_data)
 future_data['predicted_volume'] = predictions
 
-# Opslaan van de voorspellingen naar een Excel-bestand
+# Opslaan van de voorspellingen in een Excel-bestand
 future_data.to_excel(output_file_predictions, index=False)
 print(f"Voorspellingen zijn opgeslagen in '{output_file_predictions}'.")
