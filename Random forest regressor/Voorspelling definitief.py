@@ -35,7 +35,7 @@ X['point'] = label_encoder_point.fit_transform(X['point'])
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=69)
 
 # Model initialiseren en trainen
-model = RandomForestRegressor(random_state=69, n_estimators=101)
+model = RandomForestRegressor(random_state=150, n_estimators=150)
 model.fit(X_train, y_train)
 
 # Testen van het model op de testset

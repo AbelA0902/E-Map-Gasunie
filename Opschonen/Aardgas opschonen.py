@@ -27,7 +27,7 @@ if df is not None:
 
     def clean_data(df, start_date, today):
         df.fillna({
-            'classification': 2,  
+            'classification': 1 or 2,  
             'granularity': 5,  
             'activity': 1, 
         }, inplace=True)
@@ -40,18 +40,15 @@ if df is not None:
        
         df.drop_duplicates(inplace=True)
 
-       
         df = df[(df['validfrom'] >= start_date) & (df['validfrom'] <= today)]
 
-        
         valid_classifications = [1, 2, 3]
-        valid_granularities = [3, 4, 5, 6, 7, 8]
+        valid_granularities = [5]
         valid_activities = [1, 2]
 
         df = df[df['classification'].isin(valid_classifications)]
         df = df[df['granularity'].isin(valid_granularities)]
         df = df[df['activity'].isin(valid_activities)]
-
         
         df.loc[df['validto'] < df['validfrom'], 'validto'] = df['validfrom'] + pd.Timedelta(hours=1)
 
