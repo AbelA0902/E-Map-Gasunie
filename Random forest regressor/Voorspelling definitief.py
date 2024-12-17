@@ -21,6 +21,13 @@ data['hour'] = data['validfrom'].dt.hour
 data['day'] = data['validfrom'].dt.day
 data['month'] = data['validfrom'].dt.month
 data['year'] = data['validfrom'].dt.year
+ 
+# Voeg lagged features toe op basis van de kolom 'volume'
+data['volume_lag1'] = data['volume'].shift(1)  # Volume van 1 uur geleden
+data['volume_lag24'] = data['volume'].shift(24)  # Volume van 24 uur geleden
+
+# Verwijder rijen met ontbrekende waarden (door lagged kolommen)
+data = data.dropna(subset=['volume', 'volume_lag1', 'volume_lag24'])
 
 # Kenmerken en doelvariabele instellen
 features = ['point', 'hour', 'day', 'month', 'year']
@@ -30,6 +37,9 @@ y = data['volume']
 # Coderingsproces voor categorische gegevens in 'point'
 label_encoder_point = LabelEncoder()
 X['point'] = label_encoder_point.fit_transform(X['point'])
+
+# Split de data in een training- en testset (80% training, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Splitsen van data in een training- (80%) en testset (20%)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=69)
