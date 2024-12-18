@@ -13,7 +13,6 @@ categories = {
 }
 
 years = np.arange(2022, 2022 + 10)
-#data plotten voor visualisatie 
 plt.figure(figsize=(12, 8))
 
 for category, usage in categories.items():

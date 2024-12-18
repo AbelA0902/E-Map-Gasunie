@@ -17,21 +17,19 @@ simulated_totals_neutraal = []
 for year in range(future_years):
     yearly_total = 0
     for stats in data_neutraal.values():
-        # Bereken het gemiddelde waterverbruik met de kleine stijging
         mean = stats["mean"] * (1 + stats["increase_rate"] * (year / future_years))
-        std = mean * 0.1  # Onzekerheid is 10% van de waarde
-        simulated_category = np.random.normal(mean, std, n_simulations)  # Simulaties uitvoeren
-        yearly_total += np.mean(simulated_category)  # Gemiddelde optellen
-    simulated_totals_neutraal.append(yearly_total)  # Voeg totaalverbruik toe
+        std = mean * 0.1  
+        simulated_category = np.random.normal(mean, std, n_simulations)  
+        yearly_total += np.mean(simulated_category)  
+    simulated_totals_neutraal.append(yearly_total)  
 
-# Maak een grafiek van de resultaten
 years = np.arange(2022, 2022 + future_years)
 
 plt.figure(figsize=(12, 6))
 plt.plot(years, simulated_totals_neutraal, marker='o', color='blue', label="Neutraal scenario: Totaal watergebruik")
 plt.fill_between(
     years,
-    np.array(simulated_totals_neutraal) - 5,  # Onzekerheidsinterval
+    np.array(simulated_totals_neutraal) - 5,  
     np.array(simulated_totals_neutraal) + 5,
     color='blue',
     alpha=0.2,

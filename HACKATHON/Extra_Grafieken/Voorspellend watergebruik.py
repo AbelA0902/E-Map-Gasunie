@@ -9,8 +9,8 @@ data = {
     "Herfst": {"mean": 125, "std": 5},
 }
 
-n_simulations = 10000  # Aantal simulaties
-future_years = 10  # Voorspelling voor de komende 10 jaar
+n_simulations = 10000  
+future_years = 10  
 simulated_averages = []
 
 # Simuleer het gemiddelde waterverbruik over 10 jaar
@@ -18,10 +18,10 @@ for year in range(future_years):
     yearly_average = 0
     for stats in data.values():
         simulated_season = np.random.normal(stats["mean"], stats["std"], n_simulations)
-        yearly_average += np.mean(simulated_season)  # Bereken gemiddelde per seizoen
-    simulated_averages.append(yearly_average / 4)  # Gemiddelde over 4 seizoenen
+        yearly_average += np.mean(simulated_season)  
+    simulated_averages.append(yearly_average / 4)  
 
-# Maak een grafiek van de voorspelling
+
 years = np.arange(2022, 2022 + future_years)
 
 plt.figure(figsize=(12, 6))
