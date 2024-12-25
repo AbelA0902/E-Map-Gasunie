@@ -63,6 +63,6 @@ grouped_data = data.groupby(['point', 'type']).agg({
 }).reset_index()
 
 # Opslaan naar een nieuw Excel-bestand voor visualisatie in Power BI
-grouped_data.to_excel('prepared_data_with_coordinates.xlsx', index=False)
+grouped_data.to_excel('prepared_data_solar.xlsx', index=False)
 
 print("De gegevens zijn succesvol voorbereid en opgeslagen in 'prepared_data_with_coordinates.xlsx'.")
