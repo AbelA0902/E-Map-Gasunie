@@ -10,7 +10,7 @@ headers = {
 }
 
 # Datuminstellingen
-start_date = "2022-01-01"  # Begin van de data
+start_date = "2024-01-01"  # Begin van de data
 today = datetime.date.today()  # Huidige datum
 
 # Parameters die eenvoudig aanpasbaar zijn
@@ -80,7 +80,7 @@ print(f"Aantal rijen verzameld: {len(all_data)}")
 # Data opslaan in Excel
 if all_data:
     df = pd.DataFrame(all_data)
-    file_name = "Fossilgaspower_Data_2022_to_Today.xlsx"
+    file_name = "Fossilgaspower_Data_2024_to_Today.xlsx"
     df.to_excel(file_name, index=False)
     print(f"Data succesvol opgeslagen in {file_name}")
 else:
