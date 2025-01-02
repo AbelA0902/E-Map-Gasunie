@@ -14,37 +14,37 @@ start_date = "2023-01-01"  # Begin van de data
 today = datetime.date.today()  # Huidige datum
 
 # Parameters die eenvoudig aanpasbaar zijn
-points = [0,14]
+points = [0, 14]
 types = [18]  # Wind
 activities = [1]  # Providing
 classifications = [1, 2, 3]  # Current
 granularities = [5]  # Per uur
 granularity_timezones = [1]  # CET
 
-# Mapping van de points naar de juiste latitude en longitude
+# Mapping van de points naar de juiste provincie
 location_mapping = {
-    0: {"latitude": 52.3784, "longitude": 4.9009},  # Nederland
-    1: {"latitude": 53.2194, "longitude": 6.5665},  # Groningen
-    2: {"latitude": 53.2012, "longitude": 5.7998},  # Friesland
-    3: {"latitude": 52.9035, "longitude": 6.6177},  # Drenthe
-    4: {"latitude": 52.4975, "longitude": 6.0765},  # Overijssel
-    5: {"latitude": 52.4095, "longitude": 5.4864},  # Flevoland
-    6: {"latitude": 52.2298, "longitude": 5.2830},  # Gelderland
-    7: {"latitude": 52.0907, "longitude": 5.1214},  # Utrecht
-    8: {"latitude": 52.3794, "longitude": 4.9009},  # Noord-Holland
-    9: {"latitude": 52.0106, "longitude": 4.4945},  # Zuid-Holland
-    10: {"latitude": 51.4584, "longitude": 3.6580},  # Zeeland
-    11: {"latitude": 51.5857, "longitude": 5.1207},  # Noord-Brabant
-    12: {"latitude": 50.8814, "longitude": 5.8691},  # Limburg
-    14: {"latitude": 52.0000, "longitude": 4.0000},  # Offshore (voorbeeld)
-    28: {"latitude": 52.1333, "longitude": 3.5125},  # Windpark Luchterduinen
-    29: {"latitude": 52.2000, "longitude": 4.0000},  # Windpark Princes Amalia
-    30: {"latitude": 52.4700, "longitude": 4.5500},  # Windpark Egmond aan Zee
-    31: {"latitude": 53.5500, "longitude": 4.9500},  # Windpark Gemini
-    33: {"latitude": 53.5333, "longitude": 3.5833},  # Windpark Borselle I&II
-    34: {"latitude": 53.5167, "longitude": 3.6000},  # Windpark Borselle III&IV
-    35: {"latitude": 52.3600, "longitude": 4.0600},  # Windpark Hollandse Kust Zuid
-    36: {"latitude": 52.4000, "longitude": 4.1200}   # Windpark Hollandse Kust Noord
+    0: "Nederland",
+    1: "Groningen",
+    2: "Friesland",
+    3: "Drenthe",
+    4: "Overijssel",
+    5: "Flevoland",
+    6: "Gelderland",
+    7: "Utrecht",
+    8: "Noord-Holland",
+    9: "Zuid-Holland",
+    10: "Zeeland",
+    11: "Noord-Brabant",
+    12: "Limburg",
+    14: "Offshore",
+    28: "Windpark Luchterduinen",
+    29: "Windpark Princes Amalia",
+    30: "Windpark Egmond aan Zee",
+    31: "Windpark Gemini",
+    33: "Windpark Borselle I&II",
+    34: "Windpark Borselle III&IV",
+    35: "Windpark Hollandse Kust Zuid",
+    36: "Windpark Hollandse Kust Noord"
 }
 
 # Lijst voor het opslaan van alle data
@@ -79,9 +79,8 @@ for point in points:
                                 data = response.json()
                                 if data.get('hydra:totalItems', 0) > 0:
                                     for item in data['hydra:member']:
-                                        # Voeg locatiegegevens toe
-                                        item['latitude'] = location_mapping[point]['latitude']
-                                        item['longitude'] = location_mapping[point]['longitude']
+                                        # Voeg provinciegegevens toe
+                                        item['province'] = location_mapping[point]
                                         item['point'] = point
                                         item['type'] = energy_type
                                         item['activity'] = activity
@@ -106,10 +105,10 @@ for point in points:
 # Controleer hoeveel data is verzameld
 print(f"Aantal rijen verzameld: {len(all_data)}")
 
-# Data opslaan in Excel
+# Data opslaan in Excel 
 if all_data:
     df = pd.DataFrame(all_data)
-    file_name = "Fossil_Data_with_Location.xlsx"
+    file_name = "Fossil_Data_with_Provinces.xlsx"
     df.to_excel(file_name, index=False)
     print(f"Data succesvol opgeslagen in {file_name}")
 else:
