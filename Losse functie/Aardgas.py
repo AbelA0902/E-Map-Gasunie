@@ -18,7 +18,7 @@ points = [0,14]
 types = [18]  # Fossilgaspower
 activities = [1]  # Providing
 classifications = [1, 2, 3]  # Current
-granularities = [5]  # Per uur
+granularities = [6]  # Per uur
 granularity_timezones = [1]  # CET
 
 # Lijst voor het opslaan van alle data
@@ -80,7 +80,7 @@ print(f"Aantal rijen verzameld: {len(all_data)}")
 # Data opslaan in Excel
 if all_data:
     df = pd.DataFrame(all_data)
-    file_name = "Fossilgaspower_Data_2024_to_Today.xlsx"
+    file_name = "FossilgaspowerPOWERBI.xlsx"
     df.to_excel(file_name, index=False)
     print(f"Data succesvol opgeslagen in {file_name}")
 else:

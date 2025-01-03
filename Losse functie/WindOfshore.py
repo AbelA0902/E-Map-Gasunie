@@ -18,7 +18,7 @@ points = [28,29,30,31,33,34,35,36]
 types = [17]  # Windoffshore
 activities = [1]  # Providing
 classifications = [1,2,3]  # Current
-granularities = [5]  # Per uur
+granularities = [6]  # Per uur
 granularity_timezones = [1]  #CET
 
 
@@ -81,7 +81,7 @@ print(f"Aantal rijen verzameld: {len(all_data)}")
 # Data opslaan in Excel
 if all_data:
     df = pd.DataFrame(all_data)
-    file_name = "Windoffshore_Data_2022_to_Today(Dashboard).xlsx"
+    file_name = "WindoffshorePOWERBI.xlsx"
     df.to_excel(file_name, index=False)
     print(f"Data succesvol opgeslagen in {file_name}")
 else:

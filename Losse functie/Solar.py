@@ -18,7 +18,7 @@ points = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 types = [2]  # Zon
 activities = [1]  # Providing
 classifications = [1, 2, 3]  # Current
-granularities = [5]  # Per uur
+granularities = [6]  # Per uur
 granularity_timezones = [1]  # CET
 
 # Lijst voor het opslaan van alle data
@@ -80,7 +80,7 @@ print(f"Aantal rijen verzameld: {len(all_data)}")
 # Data opslaan in Excel
 if all_data:
     df = pd.DataFrame(all_data)
-    file_name = "Solar_Data_2022_to_Today.xlsx"
+    file_name = "Solar_DataPOWERBI.xlsx"
     df.to_excel(file_name, index=False)
     print(f"Data succesvol opgeslagen in {file_name}")
 else:
