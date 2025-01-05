@@ -10,15 +10,15 @@ headers = {
 }
 
 # Datuminstellingen
-start_date = "2024-01-01"  # Begin van de data
+start_date = "2016-03-01"  # Begin van de data
 today = datetime.date.today()  # Huidige datum
 
 # Parameters die eenvoudig aanpasbaar zijn
 points = [0,14]
 types = [18]  # Fossilgaspower
 activities = [1]  # Providing
-classifications = [1, 2, 3]  # Current
-granularities = [5]  # Per uur
+classifications = [1, 2]  
+granularities = [6]  
 granularity_timezones = [1]  # CET
 
 # Lijst voor het opslaan van alle data
@@ -80,7 +80,7 @@ print(f"Aantal rijen verzameld: {len(all_data)}")
 # Data opslaan in Excel
 if all_data:
     df = pd.DataFrame(all_data)
-    file_name = "Fossilgaspower_Data_2024_to_Today.xlsx"
+    file_name = "FossilgaspowerDashboard.xlsx"
     df.to_excel(file_name, index=False)
     print(f"Data succesvol opgeslagen in {file_name}")
 else:
