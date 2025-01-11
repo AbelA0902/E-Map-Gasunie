@@ -10,7 +10,7 @@ headers = {
 }
 
 # Datuminstellingen
-start_date = "2024-01-01"  # Begin van de data
+start_date = "2016-01-01"  # Begin van de data
 today = datetime.date.today()  # Huidige datum
 
 # Parameters die eenvoudig aanpasbaar zijn

@@ -10,7 +10,7 @@ headers = {
 }
 
 # Datuminstellingen
-start_date = "2022-01-01"  # Begin van de data
+start_date = "2016-01-01"  # Begin van de data
 today = datetime.date.today()  # Huidige datum
 
 # Parameters die eenvoudig aanpasbaar zijn
@@ -18,7 +18,7 @@ points = [1,2,3,4,5,6,7,8,9,10,11,12]
 types = [1]  # Wind
 activities = [1]  # Providing
 classifications = [1,2,3]  # Current
-granularities = [6]  # Per uur
+granularities = [6]  # Per dag
 granularity_timezones = [1]  #CET
 
 # Lijst voor het opslaan van alle data
