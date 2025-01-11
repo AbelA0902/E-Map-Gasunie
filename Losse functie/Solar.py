@@ -10,14 +10,22 @@ headers = {
 }
 
 # Datuminstellingen
+<<<<<<< HEAD
 start_date = "2016-01-01"  # Begin van de data
+=======
+start_date = "2016-03-01"  # Begin van de data
+>>>>>>> 8f77a455fa980c765d47089afa346e702ca9b63c
 today = datetime.date.today()  # Huidige datum
 
 # Parameters die eenvoudig aanpasbaar zijn
 points = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 types = [2]  # Zon
 activities = [1]  # Providing
+<<<<<<< HEAD
 classifications = [1, 2, 3]  # Current
+=======
+classifications = [1, 2]  
+>>>>>>> 8f77a455fa980c765d47089afa346e702ca9b63c
 granularities = [6]  # Per dag
 granularity_timezones = [1]  # CET
 
@@ -80,7 +88,7 @@ print(f"Aantal rijen verzameld: {len(all_data)}")
 # Data opslaan in Excel
 if all_data:
     df = pd.DataFrame(all_data)
-    file_name = "Solar_DataPOWERBI.xlsx"
+    file_name = "SolarDashboard.xlsx"
     df.to_excel(file_name, index=False)
     print(f"Data succesvol opgeslagen in {file_name}")
 else:

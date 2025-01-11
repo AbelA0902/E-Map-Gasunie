@@ -10,14 +10,18 @@ headers = {
 }
 
 # Datuminstellingen
+<<<<<<< HEAD
 start_date = "2016-01-01"  # Begin van de data
+=======
+start_date = "2016-03-01"  # Begin van de data
+>>>>>>> 8f77a455fa980c765d47089afa346e702ca9b63c
 today = datetime.date.today()  # Huidige datum
 
 # Parameters die eenvoudig aanpasbaar zijn
 points = [28,29,30,31,33,34,35,36]  
 types = [17]  # Windoffshore
 activities = [1]  # Providing
-classifications = [1,2,3]  # Current
+classifications = [1,2] 
 granularities = [6]  # Per uur
 granularity_timezones = [1]  #CET
 
@@ -81,7 +85,11 @@ print(f"Aantal rijen verzameld: {len(all_data)}")
 # Data opslaan in Excel
 if all_data:
     df = pd.DataFrame(all_data)
+<<<<<<< HEAD
     file_name = "WindoffshorePOWERBI2.0.xlsx"
+=======
+    file_name = "WindoffshoreDashboard.xlsx"
+>>>>>>> 8f77a455fa980c765d47089afa346e702ca9b63c
     df.to_excel(file_name, index=False)
     print(f"Data succesvol opgeslagen in {file_name}")
 else:
